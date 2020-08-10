@@ -1,11 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    some-specific-annotation: foobar
   labels:
-    app.kubernetes.io/component: query-layer
-    app.kubernetes.io/instance: thanos-query
-    app.kubernetes.io/name: thanos-query
-    app.kubernetes.io/version: v0.14.0
+    app: thanos-query
   name: thanos-query
   namespace: thanos
 spec:
@@ -21,7 +20,7 @@ spec:
         app.kubernetes.io/component: query-layer
         app.kubernetes.io/instance: thanos-query
         app.kubernetes.io/name: thanos-query
-        app.kubernetes.io/version: v0.14.0
+        app.kubernetes.io/version: v0.13.0
     spec:
       affinity:
         podAntiAffinity:
@@ -42,13 +41,9 @@ spec:
         - query
         - --grpc-address=0.0.0.0:10901
         - --http-address=0.0.0.0:9090
-        - --query.replica-label=prometheus_replica
-        - --query.replica-label=rule_replica
-        - --store=dnssrv+_grpc._tcp.thanos-receive.thanos.svc.cluster.local
-        - --store=dnssrv+_grpc._tcp.thanos-rule.thanos.svc.cluster.local
+        - --query.replica-label=replica
         - --store=dnssrv+_grpc._tcp.thanos-store.thanos.svc.cluster.local
-        - --query.timeout=5m
-        image: quay.io/thanos/thanos:v0.14.0
+        image: quay.io/thanos/thanos:v0.13.0
         livenessProbe:
           failureThreshold: 4
           httpGet:
@@ -71,4 +66,8 @@ spec:
           periodSeconds: 5
         resources: {}
         terminationMessagePolicy: FallbackToLogsOnError
+      - args:
+        - --foo=bar
+        image: quay.io/org/app:dont-use-latest
+        name: thanos-query-sidecar
       terminationGracePeriodSeconds: 120
